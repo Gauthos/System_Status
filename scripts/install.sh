@@ -30,7 +30,7 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 0
 fi
 
-REPO_URL="https://github.com/Gauthos/System_Status/main"
+REPO_URL="https://raw.githubusercontent.com/Gauthos/System_Status/main"
 
 echo -e "\n${BLUE}>>> 检查必要的依赖...${NC}"
 # 检查并安装curl (如果需要)
