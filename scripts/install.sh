@@ -15,6 +15,7 @@ echo ""
 # 检查是否为root用户运行
 if [ "$(id -u)" -ne 0 ]; then
     echo -e "${RED}错误: 请以root用户运行此脚本${NC}" >&2
+    echo -e "使用命令: sudo bash install.sh" >&2
     exit 1
 fi
 
@@ -30,34 +31,51 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 0
 fi
 
-REPO_URL="https://raw.githubusercontent.com/Gauthos/System_Status/main"
-
 echo -e "\n${BLUE}>>> 检查必要的依赖...${NC}"
-# 检查并安装curl (如果需要)
-if ! command -v curl &> /dev/null; then
-    echo -e "安装curl..."
-    apt-get update && apt-get install -y curl
+# 检查并安装必要的依赖
+NEEDED_PACKAGES="curl lsb-release procps hostname net-tools"
+PACKAGES_TO_INSTALL=""
+
+for package in $NEEDED_PACKAGES; do
+    if ! dpkg -l | grep -q "ii  $package "; then
+        PACKAGES_TO_INSTALL="$PACKAGES_TO_INSTALL $package"
+    fi
+done
+
+if [ ! -z "$PACKAGES_TO_INSTALL" ]; then
+    echo -e "安装必要的依赖: $PACKAGES_TO_INSTALL"
+    apt-get update && apt-get install -y $PACKAGES_TO_INSTALL
     if [ $? -ne 0 ]; then
-        echo -e "${RED}错误: 无法安装curl${NC}" >&2
+        echo -e "${RED}错误: 无法安装必要的依赖${NC}" >&2
         exit 1
     fi
 fi
 
-echo -e "\n${BLUE}>>> 下载系统状态显示脚本...${NC}"
+# 检查是否有本地system-status.sh文件
+LOCAL_SCRIPT="system-status.sh"
+SCRIPT_PATH="/usr/local/bin/system-status.sh"
+
+echo -e "\n${BLUE}>>> 安装系统状态显示脚本...${NC}"
 # 创建目标目录
 mkdir -p /usr/local/bin
 
-# 下载系统状态显示脚本
-echo -e "从仓库下载脚本..."
-curl -s -o /usr/local/bin/system-status.sh ${REPO_URL}/system-status.sh
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}错误: 无法下载脚本文件${NC}" >&2
-    exit 1
+# 如果当前目录有system-status.sh文件，直接使用本地文件
+if [ -f "$LOCAL_SCRIPT" ]; then
+    echo -e "使用本地系统状态显示脚本..."
+    cp "$LOCAL_SCRIPT" "$SCRIPT_PATH"
+else
+    # 否则从GitHub下载
+    REPO_URL="https://raw.githubusercontent.com/Gauthos/System_Status/main"
+    echo -e "从仓库下载脚本..."
+    if ! curl -s -o "$SCRIPT_PATH" "${REPO_URL}/system-status.sh"; then
+        echo -e "${RED}错误: 无法从GitHub下载脚本文件${NC}" >&2
+        echo -e "尝试手动下载文件并重新运行安装脚本" >&2
+        exit 1
+    fi
 fi
 
 # 设置执行权限
-chmod +x /usr/local/bin/system-status.sh
+chmod +x "$SCRIPT_PATH"
 
 echo -e "\n${BLUE}>>> 设置SSH登录自动显示...${NC}"
 # 创建profile.d脚本
@@ -74,14 +92,14 @@ chmod +x /etc/profile.d/system-status.sh
 
 echo -e "\n${BLUE}>>> 测试系统状态显示脚本...${NC}"
 # 测试运行脚本
-/usr/local/bin/system-status.sh
+bash "$SCRIPT_PATH"
 
 # 如果测试成功，显示成功消息
 if [ $? -eq 0 ]; then
     echo -e "\n${GREEN}安装成功!${NC}"
     echo -e "系统状态显示脚本已安装并配置为在SSH登录时自动运行"
     echo -e "你可以通过以下命令手动运行:"
-    echo -e "  ${BLUE}/usr/local/bin/system-status.sh${NC}"
+    echo -e "  ${BLUE}$SCRIPT_PATH${NC}"
     echo -e "\n享受你的系统状态显示工具!"
 else
     echo -e "\n${RED}警告: 脚本测试可能存在问题${NC}"
