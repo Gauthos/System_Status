@@ -20,7 +20,7 @@
 只需在终端中运行以下命令：
 
 ```bash
-curl -sSL https://github.com/Gauthos/System_Status/main/scripts/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/Gauthos/System_Status/main/scripts/install.sh | sudo bash
 ```
 
 ### 方法 2：手动安装
@@ -28,7 +28,7 @@ curl -sSL https://github.com/Gauthos/System_Status/main/scripts/install.sh | sud
 1. 克隆仓库：
 
 ```bash
-git clone https://github.com/yourusername/system-status.git
+git clone https://github.com/Gauthos/System_Status.git
 cd system-status
 ```
 
@@ -63,7 +63,7 @@ sudo nano /usr/local/bin/system-status.sh
 如需卸载系统状态显示工具，请运行以下命令：
 
 ```
-curl -sSL https://github.com/Gauthos/System_Status/main/scripts/uninstall.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/Gauthos/System_Status/main/scripts/uninstall.sh | sudo bash
 ```
 
 ## 💻 系统兼容性
